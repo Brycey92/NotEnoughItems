@@ -2,17 +2,15 @@ package codechicken.nei.jei.proxy;
 
 import codechicken.nei.api.API;
 import codechicken.nei.api.INEIGuiHandler;
-import codechicken.nei.guihook.IContainerObjectHandler;
-import codechicken.nei.handler.NEIClientEventHandler;
 import codechicken.nei.util.LogHelper;
 import mezz.jei.Internal;
 import mezz.jei.api.*;
 import mezz.jei.api.gui.IAdvancedGuiHandler;
 import mezz.jei.api.recipe.IFocus;
 import mezz.jei.api.recipe.IFocus.Mode;
+import mezz.jei.gui.GuiScreenHelper;
 import mezz.jei.recipes.RecipeRegistry;
 import mezz.jei.runtime.JeiRuntime;
-import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
@@ -87,8 +85,9 @@ public class JEIProxy implements IJEIProxy {
         try {
             JeiRuntime runtime = Internal.getRuntime();
             if (runtime != null) {
+                GuiScreenHelper guiScreenHelper = runtime.getIngredientListOverlay().guiScreenHelper;
                 Set<Rectangle> rectangles = new HashSet<>();
-                for (IAdvancedGuiHandler<GuiContainer> handler : runtime.getActiveAdvancedGuiHandlers(container)) {
+                for (IAdvancedGuiHandler<GuiContainer> handler : guiScreenHelper.getActiveAdvancedGuiHandlers(container)) {
                     List<Rectangle> ret = handler.getGuiExtraAreas(container);
                     if (ret != null) {
                         rectangles.addAll(ret);

@@ -44,7 +44,8 @@ repositories {
 
 dependencies {
     compile "codechicken:CodeChickenLib:${config.mc_version}-${config.ccl_version}:deobf"
-    compile "mezz.jei:jei_${config.mc_version}:${config.jei_version}"
+    //compile "mezz.jei:jei_${config.mc_version}:${config.jei_version}"
+    compile fileTree(dir: 'libs', include: ['*.jar'])
 }
 
 version = "${project.config.mod_version}." + System.getenv("BUILD_NUMBER") ?: "1"
