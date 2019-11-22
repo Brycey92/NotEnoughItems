@@ -9,6 +9,7 @@ import mezz.jei.api.gui.IAdvancedGuiHandler;
 import mezz.jei.api.recipe.IFocus;
 import mezz.jei.api.recipe.IFocus.Mode;
 import mezz.jei.gui.GuiScreenHelper;
+import mezz.jei.gui.overlay.IngredientListOverlay;
 import mezz.jei.recipes.RecipeRegistry;
 import mezz.jei.runtime.JeiRuntime;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -19,6 +20,8 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 
 import java.awt.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -85,9 +88,14 @@ public class JEIProxy implements IJEIProxy {
         try {
             JeiRuntime runtime = Internal.getRuntime();
             if (runtime != null) {
-                GuiScreenHelper guiScreenHelper = runtime.getIngredientListOverlay().guiScreenHelper;
+                IngredientListOverlay ingredientListOverlay = runtime.getIngredientListOverlay();
+                Field guiScreenHelperField = IngredientListOverlay.class.getDeclaredField("guiScreenHelper");
+                guiScreenHelperField.setAccessible(true);
+                GuiScreenHelper guiScreenHelper = (GuiScreenHelper) guiScreenHelperField.get(ingredientListOverlay);
                 Set<Rectangle> rectangles = new HashSet<>();
-                for (IAdvancedGuiHandler<GuiContainer> handler : guiScreenHelper.getActiveAdvancedGuiHandlers(container)) {
+                Method getActiveAdvancedGuiHandlersMethod = GuiScreenHelper.class.getDeclaredMethod("getActiveAdvancedGuiHandlers", GuiContainer.class);
+                getActiveAdvancedGuiHandlersMethod.setAccessible(true);
+                for (IAdvancedGuiHandler<GuiContainer> handler : (List<IAdvancedGuiHandler<GuiContainer>>) getActiveAdvancedGuiHandlersMethod.invoke(guiScreenHelper, container)) {
                     List<Rectangle> ret = handler.getGuiExtraAreas(container);
                     if (ret != null) {
                         rectangles.addAll(ret);
