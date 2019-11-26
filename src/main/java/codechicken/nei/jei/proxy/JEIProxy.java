@@ -86,23 +86,47 @@ public class JEIProxy implements IJEIProxy {
     @Override
     public Set<Rectangle> getExtraAreas(GuiContainer container) {
         try {
+            if (container == null) {
+                throw new NullPointerException("Received a null GuiContainer.");
+            }
+
             JeiRuntime runtime = Internal.getRuntime();
-            if (runtime != null) {
-                IngredientListOverlay ingredientListOverlay = runtime.getIngredientListOverlay();
-                Field guiScreenHelperField = IngredientListOverlay.class.getDeclaredField("guiScreenHelper");
-                guiScreenHelperField.setAccessible(true);
-                GuiScreenHelper guiScreenHelper = (GuiScreenHelper) guiScreenHelperField.get(ingredientListOverlay);
-                Set<Rectangle> rectangles = new HashSet<>();
-                Method getActiveAdvancedGuiHandlersMethod = GuiScreenHelper.class.getDeclaredMethod("getActiveAdvancedGuiHandlers", GuiContainer.class);
-                getActiveAdvancedGuiHandlersMethod.setAccessible(true);
-                for (IAdvancedGuiHandler<GuiContainer> handler : (List<IAdvancedGuiHandler<GuiContainer>>) getActiveAdvancedGuiHandlersMethod.invoke(guiScreenHelper, container)) {
+            if (runtime == null) {
+                throw new NullPointerException("Unable to get JEI runtime instance.");
+            }
+
+            IngredientListOverlay ingredientListOverlay = runtime.getIngredientListOverlay();
+            Field guiScreenHelperField = IngredientListOverlay.class.getDeclaredField("guiScreenHelper");
+            guiScreenHelperField.setAccessible(true);
+
+            GuiScreenHelper guiScreenHelper = (GuiScreenHelper) guiScreenHelperField.get(ingredientListOverlay);
+            Method getActiveAdvancedGuiHandlersMethod = GuiScreenHelper.class.getDeclaredMethod("getActiveAdvancedGuiHandlers", GuiContainer.class);
+            getActiveAdvancedGuiHandlersMethod.setAccessible(true);
+
+            Set<Rectangle> rectangles = new HashSet<>();
+            Object listObj = getActiveAdvancedGuiHandlersMethod.invoke(guiScreenHelper, container);
+            List<IAdvancedGuiHandler<GuiContainer>> list;
+
+            if (listObj == null) {
+                throw new NullPointerException("Received a null object from getActiveAdvancedGuiHandlers().");
+            }
+            if (! (listObj instanceof List)) {
+                throw new RuntimeException("Received object of wrong type from getActiveAdvancedGuiHandlers().");
+            }
+
+            list = (List<IAdvancedGuiHandler<GuiContainer>>) listObj;
+            for (IAdvancedGuiHandler<GuiContainer> handler : list) {
+                if (handler == null) {
+                    LogHelper.warn("Skipping a null handler in getExtraAreas.");
+                }
+                else {
                     List<Rectangle> ret = handler.getGuiExtraAreas(container);
                     if (ret != null) {
                         rectangles.addAll(ret);
                     }
                 }
-                return rectangles;
             }
+            return rectangles;
 
         } catch (Throwable e) {
             LogHelper.errorOnce(e, "ExtraAreas", "Error thrown whilst accessing JEI internals!");
